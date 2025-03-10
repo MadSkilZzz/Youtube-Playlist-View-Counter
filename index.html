@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Playlist Views</title>
+    <style>
+        :root {
+            --primary-color: #ff0000;
+            --background: #f5f5f5;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background-color: var(--background);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: antiquewhite;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            flex-direction: column;
+            margin-bottom: 1.5rem;
+        }
+
+        input {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #cc0000;
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background-color: #ff6666;
+            cursor: not-allowed;
+        }
+
+        .result {
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            text-align: center;
+            font-size: 1.2rem;
+            display: none;
+        }
+
+        .success {
+            background-color: #e6ffe6;
+            color: #2a802a;
+            border: 2px solid #90EE90;
+        }
+
+        .error {
+            background-color: #ffe6e6;
+            color: #cc0000;
+            border: 2px solid #ffb3b3;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .help-text {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+
+        @media (min-width: 768px) {
+            .input-group {
+                flex-direction: row;
+            }
+
+            input {
+                flex: 1;
+            }
+
+            button {
+                width: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📺 YouTube Playlist View Counter</h1>
+
+        <div class="input-group">
+            <input type="text" id="playlistUrl"
+                placeholder="Paste playlist URL here... Example: https://www.youtube.com/playlist?list=PL2gHu08ZpJHKGJtfYHd5Q0RZxYlB5Fmcl"
+                autocomplete="off">
+            <button id="submitBtn" onclick="getViewCount()">
+                Calculate Views
+            </button>
+
+            
+        </div>
+
+        <div class="result" id="result"></div>
+
+        <p class="help-text">
+            💡 Tip: Right-click on any YouTube playlist and select "Copy playlist URL" to get started.
+        </p>
+    </div>
+
+    
+    <script>
+        function getViewCount() {
+            const playlistUrl = document.getElementById('playlistUrl').value;
+            const resultDiv = document.getElementById('result');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Reset previous state
+            resultDiv.classList.remove('success', 'error');
+            resultDiv.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="loading"></div>';
+
+            const params = new URLSearchParams({ url: playlistUrl });
+
+            fetch('youtube_views.php?' + params)
+                .then(response => {
+                    if (!response.ok) throw new Error('HTTP error ' + response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        resultDiv.className = 'result success';
+                        resultDiv.innerHTML = `🎉 Total Views: ${data.views}`;
+                    } else {
+                        resultDiv.className = 'result error';
+                        resultDiv.innerHTML = `⚠️ ${data.error}`;
+                    }
+                    resultDiv.style.display = 'block';
+                })
+                .catch(error => {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = '⚠️ Error: ' + error.message;
+                    resultDiv.style.display = 'block';
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Calculate Views';
+                });
+        }
+    </script>
+
+</body>
+
+</html>
